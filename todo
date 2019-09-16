@@ -1,0 +1,12 @@
+codegen.py: take abs and write c code
+
+cobjgen.py:
+1) types are defined with classes and converted to converted to an abstract syntax tree
+2) call codegen to write API
+3) assume api.so exists
+4) use api to create properties to access elements
+
+TODO:
+1) decice if ananoymous structure return classes or abs
+
+

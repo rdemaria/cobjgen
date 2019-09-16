@@ -1,0 +1,73 @@
+# Object model
+
+
+## Needs
+
+GPU
+*   struct with inner arrays: one pointer and offset
+*   send atomic updates from CPU
+
+CPUs
+*   memory stability for struct with inner object
+*   flexibility with list
+*   need of dict object
+*   dependency managers
+
+## Mutability:
+*   content: content of component can change, but change in memory layout
+*   size: data of a structure change size
+*   structure: data access by the same method change location point
+*   access: access method change target in memory
+
+## Structure options:
+*   static size: size known at compile time
+*   flexible size: size known at initialization time (need to book keep the length)
+*    growing: element can be addedd therefore size can increase after initialization
+*    dynamic: elements can be also replaced or deleted, therefore the data needs to be pointed and access points to different location
+
+
+static, flexible types can be used as containers. Components inside containers
+should be referenced with container and offset, such that reference counting
+can work.
+
+## Accessing methods:
+*   access by method with fixed (or computed) offsets: struct, array static element or dynamic elements:
+*   access by stored offsets: array flexible size element
+*   access by stored offsets and types: array of unions
+*   stored offsets and types: inline in structs, separated in arrays
+
+## Pointers strategy
+
+A pointer is always valid for static and flexible structures untile the container is deleted.
+
+A python reference should have the container and the address.
+A dynamic list or dict is not a container. Array should be the actual container and a dynamic list should be a list of arrays:
+element id -> (arrayid,objeid) -> object
+
+
+Accessing interface:
+- by method name, by index, by string
+
+Accessor naming:
+<scalar>  <type>_get_<name1>_<name2>..._<namen(index1,index2,...,indexn)
+<type>_set_<name1>_<name2>..._<namen(index1,index2,...,indexn,value)
+<type>_addto_<name1>_<name2>..._<namen(index1,index2,...,indexn,value)
+<type>_multo_<name1>_<name2>..._<namen(index1,index2,...,indexn,value)
+<type>_getptr_<name1>_<name2>..._<namen(index1,index2,...,indexn)
+<type>_gettype_<name1>_<name2>..._<namen(index1,index2,...,indexn)
+offset for atomic change could come by substructing pointers if there is no dynamic types
+
+Object building:
+<type>_calcsize(<size of flexible components>)
+<type>_getsize(): size of the built object
+<type>_new(size): allocate object from size
+<type>_new_from_args(all_args): allocate object and initialize components
+
+
+Dependency manager:
+depency should be expressed as names/index: needs of named object
+
+expression: dependencies, function(dependencies), targets
+
+If memory is stable: dependencies and targets could be pointers
+If memort is not stable: keep relation names to pointers and update dependecy tree for destructive changes (replace, delete)
