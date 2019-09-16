@@ -53,6 +53,7 @@ def format_method_set(method):
 def write_struct_api(name,basedir,definition):
     apiname=os.path.join(basedir,name+'.h')
     print('struct',apiname)
+    #print(definition)
     methods=list(struct_gen_methods(name,[],[],definition))
     for method in methods:
         print(format_method_get(method))

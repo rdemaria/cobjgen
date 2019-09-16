@@ -48,7 +48,7 @@ class UnionA(co.Union):
 
 class Array1(co.Array):
     _element: UnionA
-    _length: 3
+    _shape: 3
 
 class Array2(co.SOA):
     _element: StructA

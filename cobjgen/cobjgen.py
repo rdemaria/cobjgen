@@ -7,6 +7,7 @@ Wnen a class is defined the API is written.
 
 """
 import os
+from collections import OrderedDict
 
 from .codegen import write_struct_api
 
@@ -62,7 +63,7 @@ class MetaStruct(MetaGeneric):
             dct['_defaults']=defaults
             newcls=type.__new__(cls, clsname, bases, dct)
             apidir=get_apidir()
-            if apidir is not None:
+            if apidir is not None and clsname is not 'none':
                write_struct_api(clsname,apidir,newcls._to_abs())
             return newcls
         else:
@@ -108,19 +109,20 @@ def mkarray(name,element,shape):
         return 'array',name,element,shape
 
 def array(element,*shape):
+    if len(shape)==0:
+        shape=(None,)
     return mkarray(None,element,shape)
 
 
 ### SOA
 def mksoa(name,element,shape):
-    from collections import OrderedDict
     element=_to_abs(element)
     if element[0]!='struct':
         raise TypeError("SOA not from struct")
     fields=OrderedDict()
     defaults={}
     for k,v,d in element[2]:
-        fields[k]=array(None,v,shape)
+        fields[k]=mkarray(None,v,shape)
         defaults[k]=d
     return mkstruct(name,fields,defaults)
 
@@ -136,11 +138,25 @@ class MetaSoa(type):
             try:
                 ann=dct['__annotations__']
                 eltype=ann['_element']
-                shape=ann.get('_shape')
+                shape=ann.get('_shape',[None])
+                ann['_shape']=shape
+                fields=OrderedDict()
+                defaults={}
+                for k,v in eltype._fields.items():
+                    fields[k]=array(v,*shape)
+                    defaults[k]=eltype._defaults.get(k)
+                dct['_fields']=fields
+                dct['_defaults']=defaults
             except KeyError:
-                msg=f"Array `{clsname}` does not have element type"
+                msg=f"DOS `{clsname}` does not have valid element type"
                 raise TypeError(msg)
-        return super().__new__(cls, clsname, bases, dct)
+            newcls=type.__new__(cls, clsname, bases, dct)
+            apidir=get_apidir()
+            if apidir is not None and clsname is not 'none':
+               write_struct_api(clsname,apidir,newcls._to_abs())
+            return newcls
+        else:
+            return super().__new__(cls, clsname, bases, dct)
     def _to_abs(cls):
         ann=cls.__annotations__
         return mksoa(cls.__name__,ann['_element'],ann['_shape'])
